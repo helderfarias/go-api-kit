@@ -4,6 +4,8 @@ go 1.12
 
 require (
 	github.com/hashicorp/consul/api v1.1.0
+	github.com/helderfarias/sqlx-wrapper v1.0.8
+	github.com/jmoiron/sqlx v1.2.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.3.0
 	gopkg.in/h2non/gock.v1 v1.0.15
