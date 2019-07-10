@@ -8,7 +8,7 @@ import (
 )
 
 type ConnectionFactory interface {
-	NewConnection() (wrapper.UnitOfWork, error)
+	NewConnection() wrapper.UnitOfWork
 
 	NewConnectionWithTransaction() (wrapper.UnitOfWork, error)
 }
@@ -28,8 +28,8 @@ func NewPostgresConnectionFactory(ds string, poolMin, poolMax int) (ConnectionFa
 	return &postgresConnectionFactory{db: conn}, nil
 }
 
-func (f *postgresConnectionFactory) NewConnection() (wrapper.UnitOfWork, error) {
-	return wrapper.NewUnitOfWork(f.db, nil), nil
+func (f *postgresConnectionFactory) NewConnection() wrapper.UnitOfWork {
+	return wrapper.NewUnitOfWork(f.db, nil)
 }
 
 func (f *postgresConnectionFactory) NewConnectionWithTransaction() (wrapper.UnitOfWork, error) {
@@ -38,5 +38,5 @@ func (f *postgresConnectionFactory) NewConnectionWithTransaction() (wrapper.Unit
 		return nil, errors.New("Nenhuma transação foi iniciada.")
 	}
 
-	return wrapper.NewUnitOfWork(f.db, tx), nil
+	return wrapper.NewUnitOfWork(nil, tx), nil
 }
