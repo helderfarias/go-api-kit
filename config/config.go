@@ -100,7 +100,7 @@ func (s *configServer) parse(body []byte, env EnvSet) error {
 
 	for key, value := range cloudConfig.PropertySources[0].Source {
 		env(key, value)
-		logrus.Infof("Loading config property %v => %v\n", key, value)
+		logrus.Debugf("Loading config property %v => %v\n", key, value)
 	}
 
 	return nil
