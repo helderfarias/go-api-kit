@@ -98,9 +98,13 @@ func (s *configServer) parse(body []byte, env EnvSet) error {
 		return fmt.Errorf("Cannot parse configuration, message: %s", err.Error())
 	}
 
-	for key, value := range cloudConfig.PropertySources[0].Source {
-		env(key, value)
-		logrus.Debugf("Loading config property %v => %v\n", key, value)
+	for i := len(cloudConfig.PropertySources) - 1; i >= 0; i-- {
+		props := cloudConfig.PropertySources[i]
+
+		for key, value := range props.Source {
+			env(key, value)
+			logrus.Debugf("Loading config property %v => %v\n", key, value)
+		}
 	}
 
 	return nil
