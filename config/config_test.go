@@ -19,9 +19,9 @@ func TestLoadConfig(t *testing.T) {
 				"label":null,
 				"version":null,
 				"propertySources":[
-					{"index":2,"name":"./service.yml","source":{"server_port":6767}},
-					{"index":1,"name":"https://github.com/service","source":{"server_port":0,"server_name":"Accountservice"}},
-					{"index":0,"name":"vault","source":{"server_port":10,"database":"postgres"}}
+					{"index":2,"name":"vault","source":{"server_port":10,"database":"postgres"}},				
+					{"index":1,"name":"./service.yml","source":{"server_port":6767}},
+					{"index":0,"name":"https://github.com/service","source":{"server_port":0,"server_name":"Accountservice"}}
 				]
 			}`,
 		)
@@ -36,7 +36,7 @@ func TestLoadConfig(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, 3, len(sources))
-	assert.Equal(t, float64(6767), sources["server_port"])
+	assert.Equal(t, float64(10), sources["server_port"])
 	assert.Equal(t, "Accountservice", sources["server_name"])
 	assert.Equal(t, "postgres", sources["database"])
 }

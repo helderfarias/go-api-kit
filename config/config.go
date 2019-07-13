@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -35,6 +36,7 @@ type springCloudConfig struct {
 }
 
 type propertySource struct {
+	Index  int                    `json:"index"`
 	Name   string                 `json:"name"`
 	Source map[string]interface{} `json:"source"`
 }
@@ -97,6 +99,10 @@ func (s *configServer) parse(body []byte, env EnvSet) error {
 	if err != nil {
 		return fmt.Errorf("Cannot parse configuration, message: %s", err.Error())
 	}
+
+	sort.SliceStable(cloudConfig.PropertySources, func(a, b int) bool {
+		return cloudConfig.PropertySources[a].Index > cloudConfig.PropertySources[b].Index
+	})
 
 	for i := len(cloudConfig.PropertySources) - 1; i >= 0; i-- {
 		props := cloudConfig.PropertySources[i]
