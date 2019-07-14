@@ -20,12 +20,14 @@ type EnvSet func(key string, value interface{})
 func Nop(key string, value interface{}) {}
 
 type configServer struct {
-	application string
-	profile     string
-	server      string
-	label       string
-	token       string
-	vaultToken  string
+	application       string
+	profile           string
+	server            string
+	label             string
+	token             string
+	tokenLookupOrigin string
+	tokenLookupValue  string
+	vaultToken        string
 }
 
 type springCloudConfig struct {
@@ -43,19 +45,23 @@ type propertySource struct {
 }
 
 type Options struct {
-	App        string
-	Profile    string
-	Server     string
-	Label      string
-	Token      string
-	VaultToken string
+	App               string
+	Profile           string
+	Server            string
+	Label             string
+	Token             string
+	TokenLookupOrigin string
+	TokenLookupValue  string
+	VaultToken        string
 }
 
 type Option func(opt *Options)
 
 func NewConfigServer(args ...Option) ConfigServer {
 	options := Options{
-		VaultToken: "none",
+		VaultToken:        "none",
+		TokenLookupOrigin: "header",
+		TokenLookupValue:  "apikey",
 	}
 
 	for _, o := range args {
@@ -63,12 +69,14 @@ func NewConfigServer(args ...Option) ConfigServer {
 	}
 
 	return &configServer{
-		application: options.App,
-		profile:     options.Profile,
-		server:      options.Server,
-		label:       options.Label,
-		token:       options.Token,
-		vaultToken:  options.VaultToken,
+		application:       options.App,
+		profile:           options.Profile,
+		server:            options.Server,
+		label:             options.Label,
+		token:             options.Token,
+		tokenLookupOrigin: options.TokenLookupOrigin,
+		tokenLookupValue:  options.TokenLookupValue,
+		vaultToken:        options.VaultToken,
 	}
 }
 
@@ -102,6 +110,20 @@ func Token(token string) Option {
 	}
 }
 
+func KeyTokenLookupFromHeader(key string) Option {
+	return func(opt *Options) {
+		opt.TokenLookupOrigin = "header"
+		opt.TokenLookupValue = key
+	}
+}
+
+func KeyTokenLookupFromQuery(key string) Option {
+	return func(opt *Options) {
+		opt.TokenLookupOrigin = "query"
+		opt.TokenLookupValue = key
+	}
+}
+
 func VaultToken(token string) Option {
 	return func(opt *Options) {
 		opt.VaultToken = token
@@ -110,7 +132,12 @@ func VaultToken(token string) Option {
 
 // Load config from file to viper
 func (s *configServer) Load(env EnvSet) error {
-	url := fmt.Sprintf("%s/%s/%s/%s?apikey=%s", s.server, s.application, s.profile, s.label, s.token)
+	url := fmt.Sprintf("%s/%s/%s/%s", s.server, s.application, s.profile, s.label)
+
+	if s.tokenLookupOrigin == "query" {
+		url = fmt.Sprintf("%s?apikey=%s", url, s.token)
+	}
+
 	logrus.Infof("Loading config from %s", url)
 
 	body, err := s.fetch(url)
@@ -136,6 +163,7 @@ func (s *configServer) fetch(url string) ([]byte, error) {
 		SetRetryWaitTime(5*time.Second).
 		SetRetryMaxWaitTime(20*time.Second).
 		SetHeader("vault_token", s.vaultToken).
+		SetHeader(s.tokenLookupValue, s.token).
 		R().
 		Get(url)
 
