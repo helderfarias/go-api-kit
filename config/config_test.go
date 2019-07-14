@@ -26,7 +26,13 @@ func TestLoadConfig(t *testing.T) {
 			}`,
 		)
 
-	s := NewConfigServer("app", "service", "http://localhost:8888", "master", "token00")
+	s := NewConfigServer(
+		App("app"),
+		Profile("service"),
+		Server("http://localhost:8888"),
+		Label("master"),
+		Token("token00"),
+	)
 
 	sources := map[string]interface{}{}
 
@@ -48,7 +54,13 @@ func TestLoadConfigWithoutEnvSet(t *testing.T) {
 		Reply(200).
 		BodyString(`{"name":"accountservice-test","profiles":["test"],"label":null,"version":null,"propertySources":[{"name":"file:/config-repo/accountservice-test.yml","source":{"server_port":6767,"server_name":"Accountservice"}}]}`)
 
-	s := NewConfigServer("app", "service", "http://localhost:8888", "master", "token00")
+	s := NewConfigServer(
+		App("app"),
+		Profile("service"),
+		Server("http://localhost:8888"),
+		Label("master"),
+		Token("token00"),
+		VaultToken("vault_token_00"))
 
 	err := s.Load(nil)
 

@@ -25,6 +25,7 @@ type configServer struct {
 	server      string
 	label       string
 	token       string
+	vaultToken  string
 }
 
 type springCloudConfig struct {
@@ -41,13 +42,69 @@ type propertySource struct {
 	Source map[string]interface{} `json:"source"`
 }
 
-func NewConfigServer(app, profile, server, label, token string) ConfigServer {
+type Options struct {
+	App        string
+	Profile    string
+	Server     string
+	Label      string
+	Token      string
+	VaultToken string
+}
+
+type Option func(opt *Options)
+
+func NewConfigServer(args ...Option) ConfigServer {
+	options := Options{
+		VaultToken: "none",
+	}
+
+	for _, o := range args {
+		o(&options)
+	}
+
 	return &configServer{
-		application: app,
-		profile:     profile,
-		server:      server,
-		label:       label,
-		token:       token,
+		application: options.App,
+		profile:     options.Profile,
+		server:      options.Server,
+		label:       options.Label,
+		token:       options.Token,
+		vaultToken:  options.VaultToken,
+	}
+}
+
+func App(name string) Option {
+	return func(opt *Options) {
+		opt.App = name
+	}
+}
+
+func Profile(name string) Option {
+	return func(opt *Options) {
+		opt.Profile = name
+	}
+}
+
+func Label(name string) Option {
+	return func(opt *Options) {
+		opt.Label = name
+	}
+}
+
+func Server(uri string) Option {
+	return func(opt *Options) {
+		opt.Server = uri
+	}
+}
+
+func Token(token string) Option {
+	return func(opt *Options) {
+		opt.Token = token
+	}
+}
+
+func VaultToken(token string) Option {
+	return func(opt *Options) {
+		opt.VaultToken = token
 	}
 }
 
@@ -76,8 +133,9 @@ func (s *configServer) fetch(url string) ([]byte, error) {
 		SetDebug(false).
 		SetDisableWarn(true).
 		SetRetryCount(5).
-		SetRetryWaitTime(5 * time.Second).
-		SetRetryMaxWaitTime(20 * time.Second).
+		SetRetryWaitTime(5*time.Second).
+		SetRetryMaxWaitTime(20*time.Second).
+		SetHeader("vault_token", s.vaultToken).
 		R().
 		Get(url)
 
