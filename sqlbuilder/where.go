@@ -11,12 +11,11 @@ type valueBuilder struct {
 }
 
 type whereBuilder struct {
-	parent      sqlBuilder
-	args        []interface{}
-	sql         string
-	sqlPaginate string
-	sqlGroupBy  string
-	sqlOrderBy  string
+	parent     sqlBuilder
+	args       []interface{}
+	sql        string
+	sqlGroupBy string
+	sqlOrderBy string
 }
 
 func (w *whereBuilder) SetPaginate(limit, offset int64) WhereBuilder {
