@@ -1,41 +1,42 @@
 package cron
 
 import (
-	"time"
-
-	"github.com/carlescere/scheduler"
-	"github.com/helderfarias/go-api-kit/cron/parser"
+	"github.com/robfig/cron/v3"
 )
 
 type Schedule struct {
-	schedule parser.Schedule
+	option Option
 }
 
 type Scheduled func()
 
-func NewSchedule(args ...Options) *Schedule {
+func NewSchedule(opts ...Options) *Schedule {
 	option := Option{
-		Expr: "* * * * *",
-	}
-	for _, a := range args {
-		a(&option)
+		StackSize: 4 << 10, // 4 KB
 	}
 
-	schedule, err := parser.NewParse(option.Expr)
-	if err != nil {
-		panic(err)
+	all := []Options{}
+	all = append(all, Expr("* * * * *"))
+	all = append(all, Recover())
+	for _, i := range opts {
+		all = append(all, i)
 	}
 
-	return &Schedule{
-		schedule: schedule,
+	for _, o := range all {
+		o(&option)
 	}
+
+	return &Schedule{option: option}
 }
 
 func (s *Schedule) Run(task Scheduled) {
-	scheduler.Every(1).Seconds().Run(func() {
-		now := time.Now()
-		if now.Equal(s.schedule.Next(now)) {
-			task()
-		}
-	})
+	target := task
+
+	if s.option.Recover != nil {
+		target = s.option.Recover(target)
+	}
+
+	c := cron.New()
+	c.AddFunc(s.option.Expr, target)
+	c.Start()
 }
