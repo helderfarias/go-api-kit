@@ -1,3 +1,3 @@
-package 
+package constants
 
 type DatabaseContextValue string
