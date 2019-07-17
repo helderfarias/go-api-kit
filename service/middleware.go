@@ -3,12 +3,12 @@ package service
 import (
 	"context"
 
-	"github.com/sirupsen/logrus"
 	"github.com/helderfarias/go-api-kit/constants"
 	"github.com/helderfarias/go-api-kit/db"
+	"github.com/sirupsen/logrus"
 )
 
-func Database(dbfactory db.ConnectionFactory, key string) Middleware {
+func Database(dbfactory db.ConnectionFactory, key constants.DatabaseContextValue) Middleware {
 	return func(next Service) Service {
 		return func(parent context.Context) (interface{}, error) {
 			conn := dbfactory.NewConnection()
@@ -22,7 +22,7 @@ func Database(dbfactory db.ConnectionFactory, key string) Middleware {
 	}
 }
 
-func DatabaseWithTx(dbfactory db.ConnectionFactory, key string) Middleware {
+func DatabaseWithTx(dbfactory db.ConnectionFactory, key constants.DatabaseContextValue) Middleware {
 	return func(next Service) Service {
 		return func(parent context.Context) (interface{}, error) {
 			tx, err := dbfactory.NewConnectionWithTransaction()
