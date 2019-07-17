@@ -1,0 +1,3 @@
+package 
+
+type DatabaseContextValue string
