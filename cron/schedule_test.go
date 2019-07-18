@@ -15,9 +15,10 @@ func TestCreateSchedule(t *testing.T) {
 func TestCreateScheduleWithEvery(t *testing.T) {
 	result := ""
 
-	NewSchedule(Every("1s")).Run(func() {
+	f := NewSchedule(Every("1s")).Run(func() {
 		result = "ok"
 	})
 
 	assert.NotNil(t, "ok", result)
+	assert.NotNil(t, f)
 }
