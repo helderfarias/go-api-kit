@@ -1,6 +1,8 @@
 package cron
 
 import (
+	"context"
+
 	"github.com/robfig/cron/v3"
 )
 
@@ -9,6 +11,10 @@ type Schedule struct {
 }
 
 type Scheduled func()
+
+type FutureTask struct {
+	delegate *cron.Cron
+}
 
 func NewSchedule(opts ...Options) *Schedule {
 	option := Option{
@@ -29,7 +35,7 @@ func NewSchedule(opts ...Options) *Schedule {
 	return &Schedule{option: option}
 }
 
-func (s *Schedule) Run(task Scheduled) {
+func (s *Schedule) Run(task Scheduled) *FutureTask {
 	target := task
 
 	if s.option.Recover != nil {
@@ -39,4 +45,10 @@ func (s *Schedule) Run(task Scheduled) {
 	c := cron.New()
 	c.AddFunc(s.option.Expr, target)
 	c.Start()
+
+	return &FutureTask{delegate: c}
+}
+
+func (f *FutureTask) Stop() context.Context {
+	return f.delegate.Stop()
 }
