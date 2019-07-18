@@ -11,10 +11,22 @@ type ConnectionFactory interface {
 	NewConnection() wrapper.UnitOfWork
 
 	NewConnectionWithTransaction() (wrapper.UnitOfWork, error)
+
+	Delegate() interface{}
+
+	Close() error
 }
 
-type postgresConnectionFactory struct {
+type connectionFactory struct {
 	db *sqlx.DB
+}
+
+func NewConnectionFactory(delegate *sqlx.DB) (ConnectionFactory, error) {
+	if err := delegate.Ping(); err != nil {
+		return nil, err
+	}
+
+	return &connectionFactory{db: delegate}, nil
 }
 
 func NewPostgresConnectionFactory(ds string, poolMin, poolMax int) (ConnectionFactory, error) {
@@ -25,18 +37,29 @@ func NewPostgresConnectionFactory(ds string, poolMin, poolMax int) (ConnectionFa
 
 	conn.SetMaxIdleConns(poolMin)
 	conn.SetMaxOpenConns(poolMax)
-	return &postgresConnectionFactory{db: conn}, nil
+	return &connectionFactory{db: conn}, nil
 }
 
-func (f *postgresConnectionFactory) NewConnection() wrapper.UnitOfWork {
+func (f *connectionFactory) NewConnection() wrapper.UnitOfWork {
 	return wrapper.NewUnitOfWork(f.db, nil)
 }
 
-func (f *postgresConnectionFactory) NewConnectionWithTransaction() (wrapper.UnitOfWork, error) {
+func (f *connectionFactory) NewConnectionWithTransaction() (wrapper.UnitOfWork, error) {
 	tx := f.db.MustBegin()
 	if tx == nil {
-		return nil, errors.New("Nenhuma transação foi iniciada.")
+		return nil, errors.New("Could not start transaction.")
 	}
 
 	return wrapper.NewUnitOfWork(nil, tx), nil
+}
+
+func (f *connectionFactory) Delegate() interface{} {
+	return f.db
+}
+
+func (f *connectionFactory) Close() error {
+	if f.db != nil {
+		return f.db.Close()
+	}
+	return nil
 }
