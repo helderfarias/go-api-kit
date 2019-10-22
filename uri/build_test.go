@@ -1,6 +1,7 @@
 package uri
 
 import (
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -61,17 +62,22 @@ func TestPathBuild(t *testing.T) {
 }
 
 func TestBuildUriWithPaths(t *testing.T) {
+	values := url.Values{}
+	values.Add("n1", "1")
+	values.Add("n2", "2")
+
 	paths := NewPaths().
 		Path("1").
 		Path("v1").
 		Path("svc").
 		Query("q1", "text tex text").
 		Query("q2", "hi").
-		Query("q3", "1%0A 2%08 3%09 4%0B 5%0C 5%0D")
+		Query("q3", "1%0A 2%08 3%09 4%0B 5%0C 5%0D").
+		QueryParams(values)
 
 	result := NewBuildURI("http://localhost").WithPaths(paths)
 
-	assert.Equal(t, "http://localhost/1/v1/svc?q1=text+tex+text&q2=hi&q3=1+2+3+4+5+5", result)
+	assert.Equal(t, "http://localhost/1/v1/svc?n1=1&n2=2&q1=text+tex+text&q2=hi&q3=1+2+3+4+5+5", result)
 }
 
 func TestBuildUriCustom(t *testing.T) {

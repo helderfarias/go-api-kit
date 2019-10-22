@@ -43,6 +43,13 @@ func (u *URIPath) Query(key string, value interface{}) *URIPath {
 	return u
 }
 
+func (u *URIPath) QueryParams(from url.Values) *URIPath {
+	for k, v := range from {
+		u.Query(k, v[0])
+	}
+	return u
+}
+
 func (u *URIPath) ToBuild(base string) string {
 	paths, err := url.Parse(base + u.paths.String())
 	if err != nil {
