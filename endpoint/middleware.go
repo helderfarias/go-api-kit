@@ -10,7 +10,7 @@ import (
 
 func Database(dbfactory db.ConnectionFactory, key constants.DatabaseContextValue) Middleware {
 	return func(next Endpoint) Endpoint {
-		return func(parent context.Context, request interface{}) (response interface{}, err error) {
+		return func(parent context.Context, request interface{}) (response EndpointResponse, err error) {
 			conn := dbfactory.NewConnection()
 			if err != nil {
 				return nil, err
@@ -24,7 +24,7 @@ func Database(dbfactory db.ConnectionFactory, key constants.DatabaseContextValue
 
 func DatabaseWithTx(dbfactory db.ConnectionFactory, key constants.DatabaseContextValue) Middleware {
 	return func(next Endpoint) Endpoint {
-		return func(parent context.Context, request interface{}) (response interface{}, err error) {
+		return func(parent context.Context, request interface{}) (response EndpointResponse, err error) {
 			tx, err := dbfactory.NewConnectionWithTransaction()
 			if err != nil {
 				return nil, err

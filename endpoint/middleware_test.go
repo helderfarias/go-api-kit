@@ -9,7 +9,7 @@ import (
 
 func TestCreateMiddleware(t *testing.T) {
 	s := func(next Endpoint) Endpoint {
-		return func(parent context.Context, request interface{}) (response interface{}, err error) {
+		return func(parent context.Context, request interface{}) (response EndpointResponse, err error) {
 			return nil, nil
 		}
 	}
