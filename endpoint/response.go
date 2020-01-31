@@ -24,5 +24,5 @@ func (e *endpointResponse) Code() int {
 }
 
 func (e *endpointResponse) Data() interface{} {
-	return e.Data()
+	return e.data
 }
