@@ -9,9 +9,12 @@ require (
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/lib/pq v1.0.0
 	github.com/nlnwa/kronasje v0.0.0-20180102072634-193c4ffac87e
+	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/robfig/cron/v3 v3.0.0
 	github.com/sirupsen/logrus v1.4.2
+	github.com/spf13/viper v1.6.2
 	github.com/stretchr/testify v1.3.0
 	gopkg.in/h2non/gock.v1 v1.0.15
+	gopkg.in/redis.v5 v5.2.9
 	gopkg.in/resty.v1 v1.12.0
 )
