@@ -6,15 +6,15 @@ type EndpointResponse interface {
 	Data() interface{}
 }
 
-type paging struct {
+type Paging struct {
 	Page  int64 `json:"page"`
 	Total int64 `json:"total"`
 	Limit int64 `json:"limit"`
 }
 
-type entityPaging struct {
+type EntityPaging struct {
 	Data   interface{} `json:"data"`
-	Paging paging      `json:"paging"`
+	Paging Paging      `json:"paging"`
 }
 
 type endpointResponse struct {
@@ -32,7 +32,7 @@ func Response(code int, data interface{}) EndpointResponse {
 
 // Paginate transfer object
 func Paginate(data interface{}, page, limit, total int64) interface{} {
-	paging := paging{}
+	paging := Paging{}
 
 	if total != 0 {
 		paging.Total = total
@@ -46,7 +46,7 @@ func Paginate(data interface{}, page, limit, total int64) interface{} {
 		paging.Page = page
 	}
 
-	return entityPaging{Data: data, Paging: paging}
+	return EntityPaging{Data: data, Paging: paging}
 }
 
 func (e *endpointResponse) Code() int {
