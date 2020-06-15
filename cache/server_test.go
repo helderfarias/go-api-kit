@@ -13,7 +13,9 @@ func TestCreateMemoryCache(t *testing.T) {
 }
 
 func TestCreateRedisCache(t *testing.T) {
-	s := newCacheServer("localhost:8000,localhost:8001")
+	s1 := newCacheServer("localhost:8000")
+	s2 := newCacheServer("localhost:8000,localhost:8001")
 
-	assert.IsType(t, s, &redisCache{})
+	assert.IsType(t, s1, &redisCache{})
+	assert.IsType(t, s2, &redisCache{})
 }
