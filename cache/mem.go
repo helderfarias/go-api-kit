@@ -20,6 +20,11 @@ func newMemoryCache() *memoryCache {
 	return &memoryCache{delegate: delegate}
 }
 
+func (r *memoryCache) Expire(key string, ttl time.Duration) error {
+	r.delegate.Delete(key)
+	return nil
+}
+
 func (r *memoryCache) Set(key string, value interface{}, ttl time.Duration) error {
 	enc, err := json.Marshal(value)
 	if err != nil {

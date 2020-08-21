@@ -13,6 +13,8 @@ type CacheServer interface {
 
 	Get(key string, target interface{}) (interface{}, error)
 
+	Expire(key string, ttl time.Duration) error
+
 	Close() error
 }
 
@@ -34,9 +36,12 @@ func newCacheServer(servers string) CacheServer {
 
 	logrus.Infof("Working with Redis Cache %d (s)", len(redisServers))
 
+	password := viper.GetString("cache_redis_password")
+	ssl := viper.GetBool("cache_redis_ssl")
+
 	if len(redisServers) == 1 {
-		return newRedisCache(redisServers[0], "")
+		return newRedisCache(redisServers[0], "", password, ssl)
 	}
 
-	return newRedisCache(redisServers[0], redisServers[1])
+	return newRedisCache(redisServers[0], redisServers[1], password, ssl)
 }
