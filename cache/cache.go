@@ -14,6 +14,10 @@ type CacheServer interface {
 
 	Expire(key string, ttl time.Duration) error
 
+	Delete(key string) error
+
+	DeleteAll(key string) error
+
 	Close() error
 }
 

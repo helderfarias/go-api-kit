@@ -10,6 +10,16 @@ type cacheServerMock struct {
 	mock.Mock
 }
 
+func (c *cacheServerMock) Delete(key string) error {
+	args := c.Called(key)
+	return args.Error(0)
+}
+
+func (c *cacheServerMock) DeleteAll(key string) error {
+	args := c.Called(key)
+	return args.Error(0)
+}
+
 func (c *cacheServerMock) Set(key string, value interface{}, ttl time.Duration) error {
 	args := c.Called(key, value, ttl)
 	return args.Error(0)

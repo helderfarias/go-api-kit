@@ -20,6 +20,18 @@ func newMemoryCache() *memoryCache {
 	return &memoryCache{delegate: delegate}
 }
 
+func (r *memoryCache) DeleteAll(key string) error {
+	for k := range r.delegate.Items() {
+		r.delegate.Delete(k)
+	}
+	return nil
+}
+
+func (r *memoryCache) Delete(key string) error {
+	r.delegate.Delete(key)
+	return nil
+}
+
 func (r *memoryCache) Expire(key string, ttl time.Duration) error {
 	r.delegate.Delete(key)
 	return nil

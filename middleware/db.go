@@ -47,10 +47,12 @@ func DatabaseWithTx(dbfactory db.ConnectionFactory, key constants.DatabaseContex
 			if err == nil {
 				if err := tx.Commit(); err != nil {
 					logrus.Error(err)
+					return nil, err
 				}
 			} else {
 				if err := tx.Rollback(); err != nil {
 					logrus.Error(err)
+					return nil, err
 				}
 			}
 

@@ -3,6 +3,8 @@ package cache
 import (
 	"crypto/tls"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -51,14 +53,67 @@ func newRedisCache(server string, ping bool) *redisCache {
 	return &redisCache{redis: redis, options: redisOpt}
 }
 
-func (r *redisCache) Expire(key string, ttl time.Duration) error {
+func (r *redisCache) DeleteAll(key string) error {
 	if r.redis == nil {
-		logrus.Info("Redis Master is not configured")
-		return nil
+		return errors.New("Redis Master is not configured")
 	}
 
-	if err := r.redis.Expire(key, ttl); err != nil {
-		logrus.Error(err)
+	if strings.TrimSpace(key) == "" {
+		return errors.New("Key is empty")
+	}
+
+	cmd := r.redis.Keys(fmt.Sprintf("*%v*", key))
+	if cmd.Err() != nil {
+		return cmd.Err()
+	}
+
+	entries, err := cmd.Result()
+	if err != nil {
+		return err
+	}
+
+	var resulErrors error
+	for _, key := range entries {
+		if cmd := r.redis.Del(key); cmd != nil && cmd.Err() != nil {
+			logrus.Error(cmd.Err())
+			resulErrors = cmd.Err()
+		}
+	}
+
+	return resulErrors
+}
+
+func (r *redisCache) Delete(key string) error {
+	if r.redis == nil {
+		return errors.New("Redis Master is not configured")
+	}
+
+	if strings.TrimSpace(key) == "" {
+		return errors.New("Key is empty")
+	}
+
+	cmd := r.redis.Del(key)
+
+	if cmd != nil && cmd.Err() != nil {
+		logrus.Error(cmd.Err())
+		return cmd.Err()
+	}
+
+	return nil
+}
+
+func (r *redisCache) Expire(key string, ttl time.Duration) error {
+	if r.redis == nil {
+		return errors.New("Redis Master is not configured")
+	}
+
+	if strings.TrimSpace(key) == "" {
+		return errors.New("Key is empty")
+	}
+
+	cmd := r.redis.Del(key)
+	if cmd != nil && cmd.Err() != nil {
+		logrus.Error(cmd.Err())
 	}
 
 	return nil
@@ -66,8 +121,7 @@ func (r *redisCache) Expire(key string, ttl time.Duration) error {
 
 func (r *redisCache) Close() error {
 	if r.redis == nil {
-		logrus.Info("Redis Master is not configured")
-		return nil
+		return errors.New("Redis Master is not configured")
 	}
 
 	if err := r.redis.Close(); err != nil {
@@ -79,7 +133,15 @@ func (r *redisCache) Close() error {
 
 func (r *redisCache) Set(key string, value interface{}, ttl time.Duration) error {
 	if r.redis == nil {
-		logrus.Info("Redis Master is not configured")
+		return errors.New("Redis Master is not configured")
+	}
+
+	if strings.TrimSpace(key) == "" {
+		return errors.New("Key is empty")
+	}
+
+	if value == nil {
+		logrus.Warn("Could not set value is empty for 'Set'")
 		return nil
 	}
 
@@ -88,9 +150,9 @@ func (r *redisCache) Set(key string, value interface{}, ttl time.Duration) error
 		return err
 	}
 
-	status := r.redis.Set(key, enc, ttl)
-	if status.Err() != nil {
-		return status.Err()
+	cmd := r.redis.Set(key, enc, ttl)
+	if cmd.Err() != nil {
+		return cmd.Err()
 	}
 
 	return nil
@@ -98,16 +160,24 @@ func (r *redisCache) Set(key string, value interface{}, ttl time.Duration) error
 
 func (r *redisCache) Get(key string, target interface{}) (interface{}, error) {
 	if r.redis == nil {
-		logrus.Info("Redis Master is not configured")
-		return nil, nil
+		return nil, errors.New("Redis Master is not configured")
 	}
 
-	status := r.redis.Get(key)
-	if status.Err() != nil {
-		return "", status.Err()
+	if strings.TrimSpace(key) == "" {
+		return nil, errors.New("Key is empty")
 	}
 
-	return target, json.Unmarshal([]byte(status.Val()), &target)
+	if target == nil {
+		logrus.Warn("Target is nil for 'Get'")
+		return target, nil
+	}
+
+	cmd := r.redis.Get(key)
+	if cmd != nil && cmd.Err() != nil {
+		return nil, cmd.Err()
+	}
+
+	return target, json.Unmarshal([]byte(cmd.Val()), &target)
 }
 
 func buildTLS(serverName string) *tls.Config {
