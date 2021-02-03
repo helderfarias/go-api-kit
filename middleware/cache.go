@@ -117,7 +117,7 @@ func CachePut(cache cache.CacheServer, name string, options ...CachePutOptions) 
 
 			resp, err := next(parent, request)
 
-			if err == nil && resp.Data() != nil {
+			if err == nil && resp.Data() != nil && resp.Code() < 400 {
 				key := opt.KeyGenerator(name, request)
 
 				newEntry := entryCache{Status: resp.Code(), Value: resp.Data()}
@@ -167,7 +167,7 @@ func Cacheable(cache cache.CacheServer, name string, options ...CacheableOptions
 
 			resp, err := next(parent, request)
 
-			if err == nil && resp.Data() != nil {
+			if err == nil && resp.Data() != nil && resp.Code() < 400 {
 				newEntry := entryCache{Status: resp.Code(), Value: resp.Data()}
 
 				if err := cache.Set(key, newEntry, opt.TTL); err != nil {
