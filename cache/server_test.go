@@ -14,19 +14,18 @@ func TestCreateMemoryCache(t *testing.T) {
 }
 
 func TestCreateRedisCache(t *testing.T) {
+	viper.Set("cache_redis_ping", "false")
+
 	s1 := newCacheServer("localhost:8000")
-	s2 := newCacheServer(":8000,localhost:8001")
 
 	assert.IsType(t, s1, &redisCache{})
-	assert.IsType(t, s2, &redisCache{})
 }
 
-func TestCreateServerWithRedisCache(t *testing.T) {
-	viper.Set("cache_redis_servers", "localhost:6380,localhost:6380")
-	viper.Set("cache_redis_password", "password00")
-	viper.Set("cache_redis_ssl", "true")
+func TestCreateServerRedisWithFallbackToMemory(t *testing.T) {
+	viper.Set("cache_redis_ping", "true")
+	viper.Set("cache_redis_servers", "fallback:4444")
 
 	s := NewCacheServer()
 
-	assert.NotNil(t, s)
+	assert.IsType(t, &memoryCache{}, s)
 }

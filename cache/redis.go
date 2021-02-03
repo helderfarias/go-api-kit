@@ -3,6 +3,7 @@ package cache
 import (
 	"crypto/tls"
 	"encoding/json"
+	"strconv"
 	"strings"
 	"time"
 
@@ -11,53 +12,52 @@ import (
 )
 
 type redisCache struct {
-	master *redis.Client
-	slave  *redis.Client
+	redis   *redis.Client
+	options redis.Options
 }
 
-func newRedisCache(masterAddr string, slaveAddr string, password string, ssl bool) CacheServer {
-	instance := &redisCache{}
+func newRedisCache(server string, ping bool) *redisCache {
+	options := strings.Split(server, ",")
 
-	tlsMaster := instance.toTLS(masterAddr, ssl)
-	instance.master = redis.NewClient(&redis.Options{Addr: masterAddr, Password: password, TLSConfig: tlsMaster})
-	if ok := instance.master.Ping(); ok.Err() != nil {
-		logrus.Errorf("Could not connect Redis Master, %v", ok.Err())
-		return instance
+	redisOpt := redis.Options{
+		Addr: options[0],
 	}
 
-	if slaveAddr != "" {
-		tlsSlave := instance.toTLS(slaveAddr, ssl)
-		instance.slave = redis.NewClient(&redis.Options{Addr: slaveAddr, Password: password, TLSConfig: tlsSlave})
-		if ok := instance.slave.Ping(); ok.Err() != nil {
-			logrus.Errorf("Could not connect Redis Slave, %v", ok.Err())
-			return instance
+	if len(options) > 2 {
+		if db, err := strconv.Atoi(options[1]); err == nil {
+			redisOpt.DB = db
 		}
 	}
 
-	return instance
-}
-
-func (r *redisCache) toTLS(url string, ssl bool) *tls.Config {
-	var tlsName *tls.Config
-
-	if ssl {
-		serverName := ""
-		if len(strings.Split(url, ":")) >= 0 {
-			serverName = strings.Split(url, ":")[0]
-		}
-
-		tlsName = &tls.Config{ServerName: serverName}
+	if len(options) > 3 {
+		redisOpt.Password = options[2]
 	}
 
-	return tlsName
+	if len(options) > 4 {
+		if ssl, err := strconv.ParseBool(options[3]); err == nil && ssl {
+			redisOpt.TLSConfig = buildTLS(options[4])
+		}
+	}
+
+	redis := redis.NewClient(&redisOpt)
+
+	if ping {
+		if ok := redis.Ping(); ok.Err() != nil {
+			logrus.Errorf("Could not connect Redis Master, %v", ok.Err())
+			return nil
+		}
+	}
+
+	return &redisCache{redis: redis, options: redisOpt}
 }
 
 func (r *redisCache) Expire(key string, ttl time.Duration) error {
-	if err := r.master.Expire(key, ttl); err != nil {
-		logrus.Error(err)
+	if r.redis == nil {
+		logrus.Info("Redis Master is not configured")
+		return nil
 	}
 
-	if err := r.slave.Expire(key, ttl); err != nil {
+	if err := r.redis.Expire(key, ttl); err != nil {
 		logrus.Error(err)
 	}
 
@@ -65,11 +65,12 @@ func (r *redisCache) Expire(key string, ttl time.Duration) error {
 }
 
 func (r *redisCache) Close() error {
-	if err := r.master.Close(); err != nil {
-		logrus.Error(err)
+	if r.redis == nil {
+		logrus.Info("Redis Master is not configured")
+		return nil
 	}
 
-	if err := r.slave.Close(); err != nil {
+	if err := r.redis.Close(); err != nil {
 		logrus.Error(err)
 	}
 
@@ -77,12 +78,17 @@ func (r *redisCache) Close() error {
 }
 
 func (r *redisCache) Set(key string, value interface{}, ttl time.Duration) error {
+	if r.redis == nil {
+		logrus.Info("Redis Master is not configured")
+		return nil
+	}
+
 	enc, err := json.Marshal(value)
 	if err != nil {
 		return err
 	}
 
-	status := r.master.Set(key, enc, ttl)
+	status := r.redis.Set(key, enc, ttl)
 	if status.Err() != nil {
 		return status.Err()
 	}
@@ -91,10 +97,21 @@ func (r *redisCache) Set(key string, value interface{}, ttl time.Duration) error
 }
 
 func (r *redisCache) Get(key string, target interface{}) (interface{}, error) {
-	status := r.slave.Get(key)
+	if r.redis == nil {
+		logrus.Info("Redis Master is not configured")
+		return nil, nil
+	}
+
+	status := r.redis.Get(key)
 	if status.Err() != nil {
 		return "", status.Err()
 	}
 
 	return target, json.Unmarshal([]byte(status.Val()), &target)
+}
+
+func buildTLS(serverName string) *tls.Config {
+	return &tls.Config{
+		ServerName: serverName,
+	}
 }

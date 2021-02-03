@@ -1,16 +1,17 @@
-package endpoint
+package middleware
 
 import (
 	"context"
 
 	"github.com/helderfarias/go-api-kit/constants"
 	"github.com/helderfarias/go-api-kit/db"
+	"github.com/helderfarias/go-api-kit/endpoint"
 	"github.com/sirupsen/logrus"
 )
 
-func Database(dbfactory db.ConnectionFactory, key constants.DatabaseContextValue) Middleware {
-	return func(next Endpoint) Endpoint {
-		return func(parent context.Context, request interface{}) (response EndpointResponse, err error) {
+func Database(dbfactory db.ConnectionFactory, key constants.DatabaseContextValue) endpoint.Middleware {
+	return func(next endpoint.Endpoint) endpoint.Endpoint {
+		return func(parent context.Context, request interface{}) (response endpoint.EndpointResponse, err error) {
 			conn := dbfactory.NewConnection()
 			if err != nil {
 				return nil, err
@@ -22,9 +23,9 @@ func Database(dbfactory db.ConnectionFactory, key constants.DatabaseContextValue
 	}
 }
 
-func DatabaseWithTx(dbfactory db.ConnectionFactory, key constants.DatabaseContextValue) Middleware {
-	return func(next Endpoint) Endpoint {
-		return func(parent context.Context, request interface{}) (response EndpointResponse, err error) {
+func DatabaseWithTx(dbfactory db.ConnectionFactory, key constants.DatabaseContextValue) endpoint.Middleware {
+	return func(next endpoint.Endpoint) endpoint.Endpoint {
+		return func(parent context.Context, request interface{}) (response endpoint.EndpointResponse, err error) {
 			tx, err := dbfactory.NewConnectionWithTransaction()
 			if err != nil {
 				return nil, err

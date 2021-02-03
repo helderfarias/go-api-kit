@@ -3,12 +3,14 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"sort"
 	"time"
 
 	"github.com/sirupsen/logrus"
 	"gopkg.in/resty.v1"
+	"gopkg.in/yaml.v2"
 )
 
 type ConfigServer interface {
@@ -28,6 +30,7 @@ type configServer struct {
 	tokenLookupOrigin string
 	tokenLookupValue  string
 	vaultToken        string
+	localYamlFile     string
 }
 
 type springCloudConfig struct {
@@ -53,6 +56,7 @@ type Options struct {
 	TokenLookupOrigin string
 	TokenLookupValue  string
 	VaultToken        string
+	LocalYamlFile     string
 }
 
 type Option func(opt *Options)
@@ -77,6 +81,13 @@ func NewConfigServer(args ...Option) ConfigServer {
 		tokenLookupOrigin: options.TokenLookupOrigin,
 		tokenLookupValue:  options.TokenLookupValue,
 		vaultToken:        options.VaultToken,
+		localYamlFile:     options.LocalYamlFile,
+	}
+}
+
+func LocalYamlFile(fileName string) Option {
+	return func(opt *Options) {
+		opt.LocalYamlFile = fileName
 	}
 }
 
@@ -132,6 +143,33 @@ func VaultToken(token string) Option {
 
 // Load config from file to viper
 func (s *configServer) Load(env EnvSet) error {
+	if s.localYamlFile != "" {
+		return s.requestConfigFromYamlFile(env)
+	}
+
+	return s.requestConfigFromRest(env)
+}
+
+func (s *configServer) requestConfigFromYamlFile(env EnvSet) error {
+	content, err := ioutil.ReadFile(s.localYamlFile)
+	if err != nil {
+		return err
+	}
+
+	sources := map[string]interface{}{}
+
+	if err := yaml.Unmarshal(content, sources); err != nil {
+		return err
+	}
+
+	for key, val := range sources {
+		env(key, val)
+	}
+
+	return nil
+}
+
+func (s *configServer) requestConfigFromRest(env EnvSet) error {
 	url := fmt.Sprintf("%s/%s/%s/%s", s.server, s.application, s.profile, s.label)
 
 	if s.tokenLookupOrigin == "query" {

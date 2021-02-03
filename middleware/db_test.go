@@ -1,15 +1,16 @@
-package endpoint
+package middleware
 
 import (
 	"context"
 	"testing"
 
+	"github.com/helderfarias/go-api-kit/endpoint"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateMiddleware(t *testing.T) {
-	s := func(next Endpoint) Endpoint {
-		return func(parent context.Context, request interface{}) (response EndpointResponse, err error) {
+	s := func(next endpoint.Endpoint) endpoint.Endpoint {
+		return func(parent context.Context, request interface{}) (response endpoint.EndpointResponse, err error) {
 			return nil, nil
 		}
 	}

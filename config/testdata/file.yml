@@ -1,0 +1,5 @@
+rest_server_host: "http://localhost"
+grpc_server_host: "grpc://localhost"
+rest_server_port: 4002
+grpc_server_port: 50051
+gateway_url: "http://localhost:3010"

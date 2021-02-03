@@ -14,9 +14,9 @@ func TestResponseWithPagination(t *testing.T) {
 
 	resp := Response(200, Paginate(data, 1, 10, 20))
 
-	assert.Equal(t, entityPaging{
+	assert.Equal(t, EntityPaging{
 		Data: data,
-		Paging: paging{
+		Paging: Paging{
 			Page:  1,
 			Total: 20,
 			Limit: 10,
