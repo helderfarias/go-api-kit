@@ -16,20 +16,29 @@ type CacheOptions struct {
 	TTL time.Duration
 }
 
+type EntryCache struct {
+	Status int         `json:"status"`
+	Value  interface{} `json:"value"`
+}
+
 // Cacheable The simplest way to enable caching behavior for a method is to demarcate it
 // with Cacheable and parameterize it with the name of the cache where the results would be stored
 func Cacheable(cache cache.CacheServer, name string, options ...CacheOptions) endpoint.Middleware {
 	return func(next endpoint.Endpoint) endpoint.Endpoint {
 		return func(parent context.Context, request interface{}) (endpoint.EndpointResponse, error) {
-			var target endpoint.EndpointResponse
-
 			key := keyGenerador(name, request)
 
-			cached, err := cache.Get(key, &target)
+			var entry EntryCache
+			cached, err := cache.Get(key, &entry)
 			if err != nil {
 				logrus.Error(err)
+
+				if err := cache.Expire(key, 0); err != nil {
+					logrus.Error(err)
+				}
 			} else if cached != nil {
-				return cached.(endpoint.EndpointResponse), nil
+				recoveryEntry := cached.(EntryCache)
+				return endpoint.Response(recoveryEntry.Status, recoveryEntry.Value), nil
 			}
 
 			resp, err := next(parent, request)
@@ -40,7 +49,8 @@ func Cacheable(cache cache.CacheServer, name string, options ...CacheOptions) en
 					defaultOptions = options[0]
 				}
 
-				if err := cache.Set(key, resp, defaultOptions.TTL); err != nil {
+				newEntry := EntryCache{Status: resp.Code(), Value: resp.Data()}
+				if err := cache.Set(key, newEntry, defaultOptions.TTL); err != nil {
 					logrus.Error(err)
 				}
 			}

@@ -14,7 +14,7 @@ import (
 func TestValueFromCacheWhenNotEmpty(t *testing.T) {
 	cacheServerMock := &cacheServerMock{}
 
-	cacheServerMock.On("Get", "7e7440170f67c54ddfdce2035c85d482", mock.Anything).Return(endpoint.Response(200, "cached: address 10"), nil)
+	cacheServerMock.On("Get", "7e7440170f67c54ddfdce2035c85d482", mock.Anything).Return(EntryCache{200, "cached: address 10"}, nil)
 
 	mw := Cacheable(cacheServerMock, "addresses")(func(ctx context.Context, request interface{}) (endpoint.EndpointResponse, error) {
 		return endpoint.Response(200, "not return"), nil
