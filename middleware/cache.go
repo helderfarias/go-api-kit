@@ -36,7 +36,8 @@ func Cacheable(cache cache.CacheServer, name string, options ...CacheOptions) en
 				if err := cache.Expire(key, 0); err != nil {
 					logrus.Error(err)
 				}
-			} else if cache, ok := cached.(EntryCache); ok && cache.Value != nil {
+			} else if cache, ok := cached.(*EntryCache); ok && cache.Value != nil {
+				logrus.WithField("cacheable.redis.get", key).Info("Cacheable")
 				return endpoint.Response(cache.Status, cache.Value), nil
 			}
 
@@ -51,6 +52,8 @@ func Cacheable(cache cache.CacheServer, name string, options ...CacheOptions) en
 				newEntry := EntryCache{Status: resp.Code(), Value: resp.Data()}
 				if err := cache.Set(key, newEntry, defaultOptions.TTL); err != nil {
 					logrus.Error(err)
+				} else {
+					logrus.WithField("cacheable.redis.put", key).Info("Cacheable")
 				}
 			}
 
