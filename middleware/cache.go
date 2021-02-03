@@ -156,8 +156,6 @@ func Cacheable(cache cache.CacheServer, name string, options ...CacheableOptions
 			var entry entryCache
 			cached, err := cache.Get(key, &entry)
 			if err != nil {
-				logrus.Error(err)
-
 				if err := cache.Delete(key); err != nil {
 					logrus.Error(err)
 				}
