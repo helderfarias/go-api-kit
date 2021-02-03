@@ -36,14 +36,13 @@ func Cacheable(cache cache.CacheServer, name string, options ...CacheOptions) en
 				if err := cache.Expire(key, 0); err != nil {
 					logrus.Error(err)
 				}
-			} else if cached != nil {
-				recoveryEntry := cached.(EntryCache)
-				return endpoint.Response(recoveryEntry.Status, recoveryEntry.Value), nil
+			} else if cache, ok := cached.(EntryCache); ok && cache.Value != nil {
+				return endpoint.Response(cache.Status, cache.Value), nil
 			}
 
 			resp, err := next(parent, request)
 
-			if err == nil && resp != nil {
+			if err == nil && resp.Data() != nil {
 				defaultOptions := CacheOptions{TTL: time.Duration(0)}
 				if len(options) >= 1 {
 					defaultOptions = options[0]
