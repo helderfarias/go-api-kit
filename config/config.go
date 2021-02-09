@@ -2,10 +2,13 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -151,22 +154,46 @@ func (s *configServer) Load(env EnvSet) error {
 }
 
 func (s *configServer) requestConfigFromYamlFile(env EnvSet) error {
-	content, err := ioutil.ReadFile(s.localYamlFile)
+	sources, err := s.openAndDecodeYmlFile(s.localYamlFile)
 	if err != nil {
 		return err
+	}
+
+	for key, val := range sources {
+		if strings.HasPrefix(fmt.Sprintf("%v", val), "file://") {
+			file := strings.TrimLeft(fmt.Sprintf("%v", val), "file://")
+			if externalSources, err := s.openAndDecodeYmlFile(file); err == nil {
+				for ekey, eval := range externalSources {
+					env(ekey, eval)
+				}
+			} else {
+				logrus.Warnf("External file erro: key %v, value: %v. Error: %v", key, val, err)
+			}
+		} else {
+			env(key, val)
+		}
+	}
+
+	return nil
+}
+
+func (s *configServer) openAndDecodeYmlFile(file string) (map[string]interface{}, error) {
+	if file == "" {
+		return map[string]interface{}{}, errors.New("Filename is empty")
+	}
+
+	content, err := ioutil.ReadFile(filepath.Clean(file))
+	if err != nil {
+		return map[string]interface{}{}, err
 	}
 
 	sources := map[string]interface{}{}
 
 	if err := yaml.Unmarshal(content, sources); err != nil {
-		return err
+		return map[string]interface{}{}, err
 	}
 
-	for key, val := range sources {
-		env(key, val)
-	}
-
-	return nil
+	return sources, nil
 }
 
 func (s *configServer) requestConfigFromRest(env EnvSet) error {

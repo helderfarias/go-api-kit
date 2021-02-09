@@ -1,0 +1,4 @@
+rest_server_host: "http://localhost"
+rest_server_port: 4002
+external_file: "file://./testdata/file_external.yml"
+external_empty_file: file:///

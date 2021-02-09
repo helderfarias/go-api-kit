@@ -96,3 +96,21 @@ func TestShouldErrorFileIfNotExistsWhenLoadConfigFromLocalYamlFile(t *testing.T)
 
 	assert.EqualError(t, err, "open testdata/file_is_not_exists.yml: no such file or directory")
 }
+
+func TestLoadConfigExternalFile(t *testing.T) {
+	s := NewConfigServer(LocalYamlFile("testdata/file_embbed.yml"))
+
+	sources := map[string]interface{}{}
+
+	err := s.Load(func(key string, value interface{}) {
+		sources[key] = value
+	})
+
+	assert.Nil(t, err)
+	assert.Equal(t, 5, len(sources))
+	assert.Equal(t, sources["rest_server_host"], "http://localhost")
+	assert.Equal(t, sources["grpc_server_host"], "grpc://localhost")
+	assert.Equal(t, sources["rest_server_port"], 4002)
+	assert.Equal(t, sources["grpc_server_port"], 50051)
+	assert.Equal(t, sources["gateway_url"], "http://localhost:3010")
+}
