@@ -160,7 +160,7 @@ func (s *configServer) requestConfigFromYamlFile(env EnvSet) error {
 
 	for key, val := range sources {
 		if strings.HasPrefix(fmt.Sprintf("%v", val), "file://") {
-			file := strings.TrimLeft(fmt.Sprintf("%v", val), "file://")
+			file := strings.TrimPrefix(fmt.Sprintf("%v", val), "file://")
 			if externalSources, err := s.openAndDecodeYmlFile(file); err == nil {
 				for ekey, eval := range externalSources {
 					env(ekey, eval)
