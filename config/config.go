@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -182,7 +181,7 @@ func (s *configServer) openAndDecodeYmlFile(file string) (map[string]interface{}
 		return map[string]interface{}{}, errors.New("Filename is empty")
 	}
 
-	content, err := ioutil.ReadFile(filepath.Clean(file))
+	content, err := ioutil.ReadFile(file)
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
