@@ -35,7 +35,7 @@ type CachePutOptions struct {
 }
 
 // EntryCache cache container
-type entryCache struct {
+type EntryCache struct {
 	Status int         `json:"status"`
 	Value  interface{} `json:"value"`
 }
@@ -120,7 +120,7 @@ func CachePut(cache cache.CacheServer, name string, options ...CachePutOptions) 
 			if err == nil && resp.Data() != nil && resp.Code() < 400 {
 				key := opt.KeyGenerator(name, request)
 
-				newEntry := entryCache{Status: resp.Code(), Value: resp.Data()}
+				newEntry := EntryCache{Status: resp.Code(), Value: resp.Data()}
 
 				if err := cache.Set(key, newEntry, opt.TTL); err != nil {
 					logrus.Error(err)
@@ -153,13 +153,13 @@ func Cacheable(cache cache.CacheServer, name string, options ...CacheableOptions
 
 			key := opt.KeyGenerator(name, request)
 
-			var entry entryCache
+			var entry EntryCache
 			cached, err := cache.Get(key, &entry)
 			if err != nil {
 				if err := cache.Delete(key); err != nil {
 					logrus.Error(err)
 				}
-			} else if cache, ok := cached.(*entryCache); ok && cache.Value != nil {
+			} else if cache, ok := cached.(*EntryCache); ok && cache.Value != nil {
 				logrus.WithField("cacheable.get", key).Debug("Cacheable")
 				opt.OnListener("get", key)
 				return endpoint.Response(cache.Status, cache.Value), nil
@@ -168,7 +168,7 @@ func Cacheable(cache cache.CacheServer, name string, options ...CacheableOptions
 			resp, err := next(parent, request)
 
 			if err == nil && resp.Data() != nil && resp.Code() < 400 {
-				newEntry := entryCache{Status: resp.Code(), Value: resp.Data()}
+				newEntry := EntryCache{Status: resp.Code(), Value: resp.Data()}
 
 				if err := cache.Set(key, newEntry, opt.TTL); err != nil {
 					logrus.Error(err)

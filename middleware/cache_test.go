@@ -88,7 +88,7 @@ func TestDeleteCacheWhenCachePutIfServiceResultError(t *testing.T) {
 func TestValueFromCacheWhenNotEmpty(t *testing.T) {
 	cacheMock := &cacheServerMock{}
 
-	cacheMock.On("Get", "addresses:bc2b9fed1ade259444436fb721d3ab22", mock.Anything).Return(&entryCache{200, "cached: address 10"}, nil)
+	cacheMock.On("Get", "addresses:bc2b9fed1ade259444436fb721d3ab22", mock.Anything).Return(&EntryCache{200, "cached: address 10"}, nil)
 
 	mw := Cacheable(cacheMock, "addresses")(func(ctx context.Context, request interface{}) (endpoint.EndpointResponse, error) {
 		return endpoint.Response(200, "not return"), nil
