@@ -65,6 +65,10 @@ func NewNatsSubscriber(nc *nats.Conn) *natsSubscriber {
 	}
 }
 
+func (p *natsServer) Close() {
+	p.nc.Close()
+}
+
 func (p *natsServer) Pub() Publisher {
 	if p.nc == nil {
 		return &emptyPub{}
