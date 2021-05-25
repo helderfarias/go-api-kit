@@ -9,6 +9,8 @@ type Subscriber interface {
 	Delivery(receivers ...SubRec) error
 
 	Subscribe(stream, subj, cons string, cmd endpoint.Endpoint) SubRec
+
+	Close() error
 }
 
 type Publisher interface {
@@ -31,6 +33,11 @@ type emptyPub struct {
 }
 
 func (e *emptySub) Delivery(receivers ...SubRec) error {
+	logrus.Warn("Subscriber not working...")
+	return nil
+}
+
+func (e *emptySub) Close() error {
 	logrus.Warn("Subscriber not working...")
 	return nil
 }

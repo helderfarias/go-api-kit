@@ -169,7 +169,7 @@ func (c *natsSubscriber) Delivery(receivers ...SubRec) error {
 	return nil
 }
 
-func (c *natsSubscriber) Shutdown() {
+func (c *natsSubscriber) Close() error {
 	logrus.Infof("drain nats connection")
 
 	if err := c.nc.Drain(); err != nil {
@@ -177,6 +177,7 @@ func (c *natsSubscriber) Shutdown() {
 	}
 
 	c.done <- nil
+	return nil
 }
 
 func (c *natsSubscriber) Subscribe(stream, subj, cons string, cmd endpoint.Endpoint) SubRec {
