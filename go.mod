@@ -8,6 +8,8 @@ require (
 	github.com/helderfarias/sqlx-wrapper v1.1.1
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/lib/pq v1.0.0
+	github.com/nats-io/nats-server/v2 v2.2.6 // indirect
+	github.com/nats-io/nats.go v1.11.0
 	github.com/onsi/ginkgo v1.14.2 // indirect
 	github.com/onsi/gomega v1.10.4 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible
