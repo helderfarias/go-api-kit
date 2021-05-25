@@ -5,13 +5,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type MessageBroker interface {
-	Sub() Subscriber
-	Pub() Publisher
-}
-
 type Subscriber interface {
-	Delivery(receivers ...SubReceiver) error
+	Delivery(receivers ...SubRec) error
+
+	Subscribe(stream, subj, cons string, cmd endpoint.Endpoint) SubRec
 }
 
 type Publisher interface {
@@ -23,7 +20,7 @@ type options struct {
 	args   map[string]interface{}
 }
 
-type SubReceiver func(o *options)
+type SubRec func(o *options)
 
 type PubOpts func(o *options)
 
@@ -33,7 +30,12 @@ type emptySub struct {
 type emptyPub struct {
 }
 
-func (e *emptySub) Delivery(receivers ...SubReceiver) error {
+func (e *emptySub) Delivery(receivers ...SubRec) error {
+	logrus.Warn("Subscriber not working...")
+	return nil
+}
+
+func (e *emptySub) Subscribe(stream, subj, cons string, cmd endpoint.Endpoint) SubRec {
 	logrus.Warn("Subscriber not working...")
 	return nil
 }

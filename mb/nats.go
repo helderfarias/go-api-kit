@@ -133,7 +133,7 @@ func (p *natsPublisher) Publish(stream, subj string, sender interface{}, opts ..
 	return pub, nil
 }
 
-func (c *natsSubscriber) Delivery(receivers ...SubReceiver) error {
+func (c *natsSubscriber) Delivery(receivers ...SubRec) error {
 	subs := []*nats.Subscription{}
 
 	for _, fillArgs := range receivers {
@@ -179,7 +179,7 @@ func (c *natsSubscriber) Shutdown() {
 	c.done <- nil
 }
 
-func (c *natsSubscriber) Subscribe(stream, subj, cons string, cmd endpoint.Endpoint) SubReceiver {
+func (c *natsSubscriber) Subscribe(stream, subj, cons string, cmd endpoint.Endpoint) SubRec {
 	return func(o *options) {
 		o.action = cmd
 		o.args["subject"] = subj
